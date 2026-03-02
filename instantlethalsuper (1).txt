@@ -35,14 +35,12 @@ do
     music.Name = "CorexHubBGM"
     music.SoundId = soundId
     music.Looped = true
-    music.Volume = 1         -- ← changed to full volume
+    music.Volume = 0.4         -- mid volume
     music.PlayOnRemove = false
     music.Parent = game:GetService("Lighting")
     
-    task.delay(0.8, function()
-        music:Play()
-        print("[Corex Hub] Background music started → " .. soundId .. " @ full volume")
-    end)
+    music:Play()               -- ← plays instantly
+    print("[Corex Hub] Background music started → " .. soundId .. " @ mid volume")
 end
 
 --// ===============================
@@ -3963,6 +3961,7 @@ Content:Input({   -- or :TextInput if your WindUI fork prefers that name
     end
 
 })
+
 
 
 
