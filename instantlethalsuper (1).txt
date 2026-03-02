@@ -35,7 +35,7 @@ do
     music.Name = "CorexHubBGM"
     music.SoundId = soundId
     music.Looped = true
-    music.Volume = 0.4         -- mid volume
+    music.Volume = 0.5         -- mid volume
     music.PlayOnRemove = false
     music.Parent = game:GetService("Lighting")
     
@@ -3961,6 +3961,7 @@ Content:Input({   -- or :TextInput if your WindUI fork prefers that name
     end
 
 })
+
 
 
 
