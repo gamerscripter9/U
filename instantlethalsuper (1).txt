@@ -3885,6 +3885,43 @@ AntiTab:Toggle({
     end
 })
 
+-- =============================================
+-- MASTER TOGGLE: ALL ANTI-SONIC SKILLS
+-- =============================================
+
+local MasterAntiSonicEnabled = false
+
+AntiTab:Toggle({
+    Title = "On all Anti Sonic Skills",
+    Desc = "Activates: Anti Downslam + Anti Uppercut (non-Saitama) + Anti Flash Strike + Anti Explosion Bomb + Anti Whirlwind Kick",
+    Value = false,
+    Callback = function(state)
+        MasterAntiSonicEnabled = state
+
+        if state then
+            -- Turn ON only if currently off
+            if not AntiDownslamEnabled        then EnableAntiDownslam()        end
+            if not AntiUppercutEnabled        then EnableAntiUppercut()        end   -- assuming this is the non-Saitama uppercut
+            if not AntiFlashStrikeEnabled     then EnableAntiFlashStrike()     end
+            if not AntiExplosionBombEnabled   then EnableAntiExplosionBomb()   end
+            if not AntiWhirlwindKickEnabled   then EnableAntiWhirlwindKick()   end
+        else
+            -- Turn OFF only if currently on
+            if AntiDownslamEnabled        then DisableAntiDownslam()        end
+            if AntiUppercutEnabled        then DisableAntiUppercut()        end
+            if AntiFlashStrikeEnabled     then DisableAntiFlashStrike()     end
+            if AntiExplosionBombEnabled   then DisableAntiExplosionBomb()   end
+            if AntiWhirlwindKickEnabled   then DisableAntiWhirlwindKick()   end
+        end
+
+        -- Optional feedback
+        if state then
+            print("[Corex Hub] Master Anti-Sonic Skills → ACTIVATED")
+        else
+            print("[Corex Hub] Master Anti-Sonic Skills → DEACTIVATED")
+        end
+    end
+})
 
 --// ===============================
 --// SLICK BACK TECH TAB (Textbox version)
