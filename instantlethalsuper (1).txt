@@ -3923,104 +3923,74 @@ AntiTab:Toggle({
     end
 })
 
-    --// ===============================
---// OTHER TECH TAB
+
+
+        --// ===============================
+--// SLICK BACK TECH TAB (Textbox version)
 --// ===============================
 
-local OtherTechTab = Window:Tab({
-    Title = "Other Tech",
-    Icon  = "arrowleft"   -- you can change icon if you want (zap, sword, etc.)
+local SlickTab = Window:Tab({
+    Title = "Slick Back Tech",
+    Icon  = "arrowleft"
 })
 
--- ====================
---  SHARED VARIABLES
--- ====================
-local slickEnabled         = false
-local instantLethalEnabled = false
-local slickJumpHeight      = 20
-local lethalJumpHeight     = 65   -- default from your lethal logic
-
+--// STATE
+local slickEnabled   = false
+local jumpHeight     = 20
 local character, humanoid, hrp = nil, nil, nil
-local TARGET_ANIM_SLICK    = "rbxassetid://10503381238"
-local LETHAL_ANIMATION_ID  = "12296113986"   -- without rbxassetid://
+local TARGET_ANIM = "rbxassetid://10503381238"
 
 -- Services
 local Players      = game:GetService("Players")
 local RunService   = game:GetService("RunService")
-local VirtualInput = game:GetService("VirtualInputManager")
+local Vim          = game:GetService("VirtualInputManager")
 local player       = Players.LocalPlayer
-local LocalPlayer  = player
 
--- ====================
---  HELPERS
--- ====================
+-- =========================
+-- CLOSEST TARGET FUNCTION
+-- =========================
 local function GetClosestTarget()
     if not hrp then return nil end
-    local closest, dist = nil, math.huge
-    for _, model in workspace:GetDescendants() do
-        if model:IsA("Model") and model ~= character then
-            local hum  = model:FindFirstChildOfClass("Humanoid")
-            local tHRP = model:FindFirstChild("HumanoidRootPart")
-            if hum and hum.Health > 0 and tHRP then
-                local d = (hrp.Position - tHRP.Position).Magnitude
-                if d < dist then
-                    dist = d
-                    closest = tHRP
+    local closestHRP, shortest = nil, math.huge
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj:IsA("Model") and obj ~= character then
+            local h = obj:FindFirstChildOfClass("Humanoid")
+            local tHRP = obj:FindFirstChild("HumanoidRootPart")
+            if h and h.Health > 0 and tHRP then
+                local dist = (hrp.Position - tHRP.Position).Magnitude
+                if dist < shortest then
+                    shortest = dist
+                    closestHRP = tHRP
                 end
             end
         end
     end
-    return closest
+    return closestHRP
 end
 
-local function getRootPart(char)
-    if not char then return nil end
-    return char:FindFirstChild("HumanoidRootPart")
-        or char:FindFirstChild("UpperTorso")
-        or char:FindFirstChild("Torso")
-end
-
-local function sendDash(char)
-    local comm = char:FindFirstChild("Communicate")
-    if not comm then return end
-
-    comm:FireServer({
-        Dash = Enum.KeyCode.W,
-        Key  = Enum.KeyCode.Q,
-        Goal = "KeyPress"
-    })
-end
-
-local function rotateCamera180()
-    local cam = workspace.CurrentCamera
-    local cf  = cam.CFrame
-    local look = cf.LookVector
-    cam.CFrame = CFrame.new(cf.Position, cf.Position + Vector3.new(-look.X, look.Y, -look.Z))
-end
-
--- ====================
---  CHARACTER SETUP
--- ====================
+-- =========================
+-- SETUP CHARACTER + ANIMATION
+-- =========================
 local function setupCharacter(char)
     character = char
-    humanoid  = char:WaitForChild("Humanoid", 5)
-    hrp       = char:WaitForChild("HumanoidRootPart", 5)
-    if not (humanoid and hrp) then return end
+    humanoid  = char:WaitForChild("Humanoid")
+    hrp       = char:WaitForChild("HumanoidRootPart")
 
-    -- ────────────────
-    -- Slick Back logic
-    -- ────────────────
+    -- Animation detection
     humanoid.AnimationPlayed:Connect(function(track)
         if not slickEnabled then return end
-        if track.Animation.AnimationId ~= TARGET_ANIM_SLICK then return end
+        if not (track.Animation and track.Animation.AnimationId == TARGET_ANIM) then return end
 
         task.wait(0.3)
 
+        -- Lock AutoRotate
         humanoid.AutoRotate = false
-        local lock = humanoid:GetPropertyChangedSignal("AutoRotate"):Connect(function()
-            humanoid.AutoRotate = false
-        end)
+        local lock  
+        lock = humanoid:GetPropertyChangedSignal("AutoRotate"):Connect(function()  
+            humanoid.AutoRotate = false  
+        end)  
 
+        -- Get target
         local targetHRP = GetClosestTarget()
         if not targetHRP then
             humanoid.AutoRotate = true
@@ -4028,125 +3998,75 @@ local function setupCharacter(char)
             return
         end
 
-        local startTime = tick()
-        local conn
-        conn = RunService.RenderStepped:Connect(function()
-            if tick() - startTime >= 1 then
-                conn:Disconnect()
+        -- Hard face-lock loop
+        local start = tick()
+        local loop
+        loop = RunService.RenderStepped:Connect(function()
+            if tick() - start >= 1 then
+                loop:Disconnect()
                 humanoid.AutoRotate = true
                 lock:Disconnect()
                 return
             end
-            hrp.CFrame = CFrame.lookAt(hrp.Position, targetHRP.Position)
+            if targetHRP then
+                hrp.CFrame = CFrame.lookAt(hrp.Position, targetHRP.Position)
+            end
         end)
 
-        -- Double Q press
-        for _ = 1, 2 do
-            VirtualInput:SendKeyEvent(true,  Enum.KeyCode.Q, false, game)
-            task.wait(0.04)
-            VirtualInput:SendKeyEvent(false, Enum.KeyCode.Q, false, game)
-            task.wait(0.06)
+        -- VirtualInputManager Q x2
+        for i = 1, 2 do
+            Vim:SendKeyEvent(true, Enum.KeyCode.Q, false, game)
+            task.wait(0.05)
+            Vim:SendKeyEvent(false, Enum.KeyCode.Q, false, game)
         end
 
-        -- Jump boost
+        -- LinearVelocity upward boost
         local lv = Instance.new("LinearVelocity")
         lv.MaxForce = math.huge
-        lv.VectorVelocity = Vector3.new(0, slickJumpHeight, 0)
+        lv.VectorVelocity = Vector3.new(0, jumpHeight, 0)
         lv.Attachment0 = Instance.new("Attachment", hrp)
         lv.Parent = hrp
-        task.delay(0.12, function() lv:Destroy() end)
-    end)
-
-    -- ────────────────
-    -- Instant Lethal logic
-    -- ────────────────
-    humanoid.AnimationPlayed:Connect(function(track)
-        if not instantLethalEnabled then return end
-
-        local id = track.Animation.AnimationId:match("(%d+)")
-        if id ~= LETHAL_ANIMATION_ID then return end
-
-        task.spawn(function()
-            task.wait(1.62)
-
-            local c = LocalPlayer.Character
-            if not c then return end
-
-            -- Triple dash
-            sendDash(c)
-            task.wait(0.06)
-            sendDash(c)
-            task.wait(0.06)
-            sendDash(c)
-
-            -- Boost
-            local root = getRootPart(c)
-            if root then
-                root.Velocity = Vector3.new(
-                    root.Velocity.X,
-                    lethalJumpHeight,
-                    root.Velocity.Z
-                )
-            end
-
-            task.wait(0.3)
-            rotateCamera180()
-        end)
+        task.wait(0.1)
+        lv:Destroy()
     end)
 end
 
--- Apply to current & future characters
-if player.Character then
-    task.spawn(setupCharacter, player.Character)
-end
+-- Initial setup + respawn handling
+if player.Character then setupCharacter(player.Character) end
 player.CharacterAdded:Connect(function(char)
-    task.wait(0.35)
+    task.wait(0.1)
     setupCharacter(char)
 end)
 
--- ====================
---        UI
--- ====================
-local section = OtherTechTab:Section({
-    Title = "Slick Back & Instant Lethal"
+-- =========================
+-- GUI ELEMENTS
+-- =========================
+local Content = SlickTab:Section({
+    Title = "Slick Back Tech"
 })
 
-section:Toggle({
-    Title = "Slick Back Tech",
-    Desc = "Auto face-lock + double Q + jump on zero-tech anim",
+Content:Toggle({
+    Title = "Enable Slick Back",
+    Desc = "Auto slick back on target animation",
     Value = false,
-    Callback = function(v) slickEnabled = v end,
+    Callback = function(state)
+        slickEnabled = state
+    end
 })
 
-section:Input({
-    Title = "Slick Jump Height",
-    Placeholder = "20–100 recommended",
-    Text = tostring(slickJumpHeight),
-    Callback = function(val)
-        local n = tonumber(val)
-        if n and n > 0 then
-            slickJumpHeight = n
+Content:Input({   -- or :TextInput if your WindUI fork prefers that name
+    Title = "Jump Height",
+    Placeholder = "Studs (e.g. 20–80)",
+    Text = tostring(jumpHeight),   -- initial displayed value
+    -- Numeric = true,             -- some versions support forcing numbers only
+    Callback = function(value)
+        local num = tonumber(value)
+        if num and num > 0 then
+            jumpHeight = num
+            print("[Slick Back] Jump height set to:", jumpHeight)
         end
-    end,
-})
+    end
 
-section:Toggle({
-    Title = "Instant Lethal",
-    Desc = "Triple dash + high jump + 180° camera flip on lethal anim",
-    Value = false,
-    Callback = function(v) instantLethalEnabled = v end,
-})
-
-section:Input({
-    Title = "Lethal Jump Boost",
-    Placeholder = "50–120 recommended",
-    Text = tostring(lethalJumpHeight),
-    Callback = function(val)
-        local n = tonumber(val)
-        if n and n > 0 then
-            lethalJumpHeight = n
-        end
-    end,
 })
 
 
