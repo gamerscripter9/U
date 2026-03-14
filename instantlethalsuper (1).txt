@@ -3851,6 +3851,40 @@ AntiTab:Toggle({
     end
 })
 
+-- =============================================
+-- MASTER TOGGLE: ALL ANTI-SAITAMA SKILLS
+-- =============================================
+
+local MasterAntiSaitamaEnabled = false
+
+AntiTab:Toggle({
+    Title = "On all Anti Saitama Skills",
+    Desc = "Activates: Anti Uppercut (Saitama) + Anti Shove + Anti Normal Punch",
+    Value = false,
+    Callback = function(state)
+        MasterAntiSaitamaEnabled = state
+
+        if state then
+            -- Turn ON (only if currently off)
+            if not AntiSaitamaEnabled     then EnableAntiSaitama()     end
+            if not AntiShoveEnabled       then EnableAntiShove()       end
+            if not AntiNormalPunchEnabled then EnableAntiNormalPunch() end
+        else
+            -- Turn OFF (only if currently on)
+            if AntiSaitamaEnabled     then DisableAntiSaitama()     end
+            if AntiShoveEnabled       then DisableAntiShove()       end
+            if AntiNormalPunchEnabled then DisableAntiNormalPunch() end
+        end
+
+        -- Optional console feedback
+        if state then
+            print("[Corex Hub] Master Anti-Saitama → ACTIVATED")
+        else
+            print("[Corex Hub] Master Anti-Saitama → DEACTIVATED")
+        end
+    end
+})
+
 
 --// ===============================
 --// SLICK BACK TECH TAB (Textbox version)
