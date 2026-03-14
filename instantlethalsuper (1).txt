@@ -3817,7 +3817,41 @@ AntiTab:Toggle({
         -- Note: no reliable way to "turn off" once loaded
     end
 })
-                         
+
+-- =============================================
+-- MASTER TOGGLE: ALL ANTI-GAROU SKILLS
+-- =============================================
+
+local MasterAntiGarouEnabled = false
+
+AntiTab:Toggle({
+    Title = "On all Anti Garou Skills",
+    Desc = "Lethal + Flowing Water + Hunter Grasp + Counter + Uppercut + Downslam",
+    Value = false,
+    Callback = function(state)
+        MasterAntiGarouEnabled = state
+
+        if state then
+            -- Enable all
+            if not AntiLethalEnabled      then EnableAntiLethal()      end
+            if not AntiFlowingEnabled     then EnableAntiFlowing()     end
+            if not AntiHunterEnabled      then EnableAntiHunter()      end
+            if not AntiCounterEnabled     then EnableAntiCounter()     end   -- ← added
+            if not AntiUppercutEnabled    then EnableAntiUppercut()    end
+            if not AntiDownslamEnabled    then EnableAntiDownslam()    end
+        else
+            -- Disable all
+            if AntiLethalEnabled      then DisableAntiLethal()      end
+            if AntiFlowingEnabled     then DisableAntiFlowing()     end
+            if AntiHunterEnabled      then DisableAntiHunter()      end
+            if AntiCounterEnabled     then DisableAntiCounter()     end   -- ← added
+            if AntiUppercutEnabled    then DisableAntiUppercut()    end
+            if AntiDownslamEnabled    then DisableAntiDownslam()    end
+        end
+    end
+})
+
+
 --// ===============================
 --// SLICK BACK TECH TAB (Textbox version)
 --// ===============================
